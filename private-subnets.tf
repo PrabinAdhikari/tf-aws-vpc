@@ -4,14 +4,14 @@ resource "aws_subnet" "private_subnet" {
   vpc_id                  = aws_vpc.custom-vpc.id
   map_public_ip_on_launch = false
   tags = {
-    Name                              = "${var.private_subnet_name_prefix}-${count.index}"
+    Name                              = "${var.common_prefix_name}-${var.private_subnet_name_prefix}-${count.index}"
     "Kubernetes.io/role/internal-elb" = 1
   }
 }
 resource "aws_route_table" "private" {
   vpc_id = aws_vpc.custom-vpc.id
   tags = {
-    Name = "${var.private_subnet_name_prefix}-route-table"
+    Name = "${var.common_prefix_name}-${var.private_subnet_name_prefix}-route-table"
   }
 }
 
@@ -21,12 +21,15 @@ resource "aws_route_table_association" "private" {
   route_table_id = aws_route_table.private.id
 }
 
-resource "aws_security_group" "end_point_sg" {
+resource "aws_security_group" "eks_end_point_sg" {
   description = "security group to govern who can access the endpoints"
   vpc_id      = aws_vpc.custom-vpc.id
   ingress {
     from_port = 443
     protocol  = "tcp"
     to_port   = 443
+  }
+  tags = {
+    Name = "${var.common_prefix_name}-eks_end_point_sg"
   }
 }

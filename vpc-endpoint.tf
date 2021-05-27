@@ -1,11 +1,11 @@
 
 locals {
   service_names = [
-    "com.amazonaws.${var.region}.ecr.api",
-    "com.amazonaws.${var.region}.ecr.dkr",
-    "com.amazonaws.${var.region}.ec2",
-    "com.amazonaws.${var.region}.logs",
-    "com.amazonaws.${var.region}.sts"
+    "ecr.api",
+    "ecr.dkr",
+    "ec2",
+    "logs",
+    "sts"
   ]
 }
 resource "aws_vpc_endpoint" "s3_api_end_point" {
@@ -14,16 +14,19 @@ resource "aws_vpc_endpoint" "s3_api_end_point" {
   route_table_ids   = [aws_route_table.private.id]
   vpc_id            = aws_vpc.custom-vpc.id
   tags = {
-    Name = "test"
+    Name = "${var.common_prefix_name}-s3_api_end_point"
   }
 }
 
 resource "aws_vpc_endpoint" "ecr_api_end_point" {
   count               = length(local.service_names)
-  service_name        = element(local.service_names, count.index)
+  service_name        = "com.amazonaws.${var.region}.${element(local.service_names, count.index)}"
   vpc_endpoint_type   = "Interface"
   private_dns_enabled = true
-  security_group_ids  = [aws_security_group.end_point_sg.id]
+  security_group_ids  = [aws_security_group.eks_end_point_sg.id]
   subnet_ids          = [element(aws_subnet.private_subnet.*.id, count.index)]
   vpc_id              = aws_vpc.custom-vpc.id
+  tags = {
+    Name = "${var.common_prefix_name}-${element(local.service_names, count.index)}"
+  }
 }

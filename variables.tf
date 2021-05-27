@@ -1,5 +1,8 @@
+variable "common_prefix_name" {
+  default = "example"
+}
 variable "vpc_name" {
-  default = "custom_vpc"
+  default = "custom-vpc"
 }
 
 variable "region" {

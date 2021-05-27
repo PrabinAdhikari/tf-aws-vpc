@@ -4,7 +4,7 @@ resource "aws_subnet" "public_subnet" {
   vpc_id                  = aws_vpc.custom-vpc.id
   map_public_ip_on_launch = true
   tags = {
-    Name                     = "${var.private_subnet_name_prefix}-${count.index}"
+    Name                     = "${var.common_prefix_name}-${var.private_subnet_name_prefix}-${count.index}"
     "Kubernetes.io/role/elb" = 1
   }
 }
@@ -12,18 +12,18 @@ resource "aws_subnet" "public_subnet" {
 resource "aws_internet_gateway" "ig" {
   vpc_id = aws_vpc.custom-vpc.id
   tags = {
-    Name = var.internet_gateway_name
+    Name = "${var.common_prefix_name}-${var.internet_gateway_name}"
   }
 }
 
 resource "aws_vpn_gateway" "vpn" {
   vpc_id = aws_vpc.custom-vpc.id
   tags = {
-    Name = "custom_vpn-gateway"
+    Name = "${var.common_prefix_name}-custom_vpn-gateway"
   }
 }
 resource "aws_vpn_gateway_attachment" "vpc-gateway-attachment" {
-  depends_on = [aws_internet_gateway.ig]
+  depends_on     = [aws_internet_gateway.ig]
   vpc_id         = aws_vpc.custom-vpc.id
   vpn_gateway_id = aws_vpn_gateway.vpn.id
 }
@@ -31,7 +31,7 @@ resource "aws_vpn_gateway_attachment" "vpc-gateway-attachment" {
 resource "aws_route_table" "public" {
   vpc_id = aws_vpc.custom-vpc.id
   tags = {
-    Name = "${var.public_subnet_name_prefix}-route-table"
+    Name = "${var.common_prefix_name}-${var.public_subnet_name_prefix}-route-table"
   }
 }
 
@@ -44,6 +44,9 @@ resource "aws_route" "public_internet_gateway" {
 resource "aws_eip" "nat_eip" {
   vpc        = true
   depends_on = [aws_internet_gateway.ig]
+  tags = {
+    Name = "${var.common_prefix_name}-nat_eip"
+  }
 }
 
 resource "aws_nat_gateway" "nat" {
@@ -51,7 +54,7 @@ resource "aws_nat_gateway" "nat" {
   subnet_id     = element(aws_subnet.public_subnet.*.id, 0)
   depends_on    = [aws_internet_gateway.ig]
   tags = {
-    Name = var.nat_gateway_name
+    Name = "${var.common_prefix_name}-${var.nat_gateway_name}"
   }
 }
 
